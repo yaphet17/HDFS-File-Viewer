@@ -8,15 +8,55 @@ group = 'com.yaphet'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'
 
+ext{
+    datapipelineVersion='7.2.0-SNAPSHOT'
+    javaFXVersion= '18.0.1'
+    javaFXPlatform = getJavaFXPlatform()
+}
+
 repositories {
     mavenCentral()
+    maven {
+        url = 'https://maven.northconcepts.com/public/repositories/datapipeline'
+    }
 }
+
+
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-logging'
+    implementation "org.openjfx:javafx-base:$javaFXVersion:$javaFXPlatform"
+    implementation "org.openjfx:javafx-controls:$javaFXVersion:$javaFXPlatform"
+    implementation "org.openjfx:javafx-graphics:$javaFXVersion:$javaFXPlatform"
+    implementation "org.openjfx:javafx-fxml:$javaFXVersion:$javaFXPlatform"
+    implementation "org.openjfx:javafx-swing:$javaFXVersion:$javaFXPlatform"
+    implementation 'de.jensd:fontawesomefx-fontawesome:4.7.0-9.1.2'
+    implementation 'de.jensd:fontawesomefx-controls:9.1.2'
+    implementation 'de.jensd:fontawesomefx-commons:9.1.2'
+    implementation 'org.apache.logging.log4j:log4j-core:2.17.2'
+    implementation 'org.springframework.boot:spring-boot-starter-logging'
+    implementation "com.northconcepts:northconcepts-datapipeline-small-business:$datapipelineVersion"
+    implementation "com.northconcepts:northconcepts-datapipeline-foundations:$datapipelineVersion"
+    implementation "com.northconcepts:northconcepts-datapipeline-integrations-parquet:$datapipelineVersion"
+    implementation "com.northconcepts:northconcepts-datapipeline-integrations-parquet:$datapipelineVersion"
+    implementation "com.northconcepts:northconcepts-datapipeline-integrations-orc:$datapipelineVersion"
+    implementation "com.northconcepts:northconcepts-datapipeline-integrations-avro:$datapipelineVersion"
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+private static String getJavaFXPlatform() {
+    def currentOS = org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.currentOperatingSystem;
+    if (currentOS.isWindows()) {
+        return 'win'
+    } else if (currentOS.isLinux()) {
+        return 'linux'
+    } else if (currentOS.isMacOsX()) {
+        return 'mac'
+    }
+    return null
 }

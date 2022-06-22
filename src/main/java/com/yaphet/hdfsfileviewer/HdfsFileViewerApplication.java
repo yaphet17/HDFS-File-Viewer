@@ -1,5 +1,6 @@
 package com.yaphet.hdfsfileviewer;
 
+import javafx.application.Application;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -7,7 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class HdfsFileViewerApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(HdfsFileViewerApplication.class, args);
+        Application.launch(HdfsFileViewerApplicationUI.class, args);
     }
 
 }
