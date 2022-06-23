@@ -26,6 +26,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class HdfsFileViewerController {
 
     private Stage chooseFile;
+
+    private final List<String> acceptedFormats=List.of("*.parquet");
     private Service<RecordList> service;
     @FXML
     public TableView fileViewer;
@@ -51,11 +53,12 @@ public class HdfsFileViewerController {
         if(file==null){
             return;
         }
+        readFile(file);
 
     }
     private File getSelectedFile(){
         FileChooser fileChooser=new FileChooser();
-        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text files","*.txt"));
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text files",acceptedFormats));
         fileChooser.setTitle("Choose file");
         return fileChooser.showOpenDialog(chooseFile);
     }
@@ -104,7 +107,8 @@ public class HdfsFileViewerController {
     private void serviceSucceeded() {
         RecordList recordList=service.getValue();
         if(!recordList.isEmpty()){
-            //TODO: prepare and populate table
+            prepareTable(getColumns(recordList));
+            populateTable(recordList);
             showSuccessMsg("");
         }else{
             showErrorMsg("Couldn't translate source text");
@@ -128,6 +132,13 @@ public class HdfsFileViewerController {
             fileViewer.getColumns().add(column);
 
         }
+    }
+
+    private void populateTable(RecordList recordList){
+        for(int i=0;i<recordList.size();i++){
+            fileViewer.getItems().add(getRow(recordList.get(i)));
+        }
+
     }
 
     private void showErrorMsg(String msg){

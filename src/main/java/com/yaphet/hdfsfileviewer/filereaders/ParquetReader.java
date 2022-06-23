@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ParquetReader extends Task<RecordList> implements FileReader {
-    private RecordList recordList;
     private final File file;
 
     public ParquetReader(File file){

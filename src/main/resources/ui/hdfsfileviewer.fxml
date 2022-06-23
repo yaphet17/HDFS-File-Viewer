@@ -44,7 +44,7 @@
             </HBox>
             <HBox alignment="CENTER" prefHeight="50.0" prefWidth="200.0" spacing="10.0">
                <children>
-                  <Button fx:id="browseBtn" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="30.0" prefWidth="120.0" text="Browse" />
+                  <Button fx:id="browseBtn" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#browse" prefHeight="30.0" prefWidth="120.0" text="Browse" />
                   <Button fx:id="csvBtn" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="30.0" prefWidth="120.0" text="Export CSV" />
                   <Button fx:id="jsonBtn" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="30.0" prefWidth="120.0" text="Export JSON" />
                   <Button fx:id="cancelBtn" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="30.0" prefWidth="120.0" text="Cancel" />
