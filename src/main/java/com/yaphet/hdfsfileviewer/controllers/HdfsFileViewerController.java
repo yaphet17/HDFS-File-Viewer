@@ -10,24 +10,34 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
+import javafx.scene.image.WritableImage;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 public class HdfsFileViewerController {
 
+    private static final Logger logger= LogManager.getLogger(HdfsFileViewerController.class);
     private Stage chooseFile;
-
-    private final List<String> acceptedFormats=List.of("*.parquet");
+    private final List<String> ACCEPTED_FORMATS = List.of("*.parquet");
+    private final List<String> EXPORT_FORMATS = List.of("*.png");
+    private final String EXPORT_IMAGE_FORMATS = "png";
     private Service<RecordList> service;
     @FXML
     public TableView fileViewer;
@@ -56,21 +66,37 @@ public class HdfsFileViewerController {
         readFile(file);
 
     }
+    @FXML
+    public void exportImage(){
+        SnapshotParameters param = new SnapshotParameters();
+        param.setDepthBuffer(true);
+        WritableImage snapshot = fileViewer.snapshot(param, null);
+        BufferedImage img = SwingFXUtils.fromFXImage(snapshot, null);
+        try {
+            File file=chooseSaveFile();
+            if(file==null){
+                //TODO: throw exceptions
+                return;
+            }
+            ImageIO.write(img, EXPORT_IMAGE_FORMATS, file);
+            showSuccessMsg("Image successfully exported");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     private File getSelectedFile(){
         FileChooser fileChooser=new FileChooser();
-        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Text files",acceptedFormats));
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("HDFS files", ACCEPTED_FORMATS));
         fileChooser.setTitle("Choose file");
         return fileChooser.showOpenDialog(chooseFile);
     }
 
     public void readFile(File file){
 
-        List<String> columnList;
-        service = new Service<RecordList>() {
+        service = new Service<>() {
             @Override
             protected Task<RecordList> createTask() {
-                ParquetReader parquetReader=new ParquetReader(file);
-                return parquetReader;
+                return new ParquetReader(file);
             }
         };
         service.start();
@@ -82,6 +108,12 @@ public class HdfsFileViewerController {
         service.setOnFailed(e -> serviceFailed(service));
         service.setOnSucceeded(e -> Platform.runLater(this::serviceSucceeded));
         service.setOnCancelled(e-> terminatedProcess("Process terminated"));
+    }
+    private File chooseSaveFile(){
+        FileChooser fileChooser=new FileChooser();
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Image file", EXPORT_FORMATS));
+        fileChooser.setTitle("Save");
+        return fileChooser.showSaveDialog(chooseFile);
     }
     private void bindServiceToStatus(){
         //show service status value in status label
@@ -140,22 +172,6 @@ public class HdfsFileViewerController {
         }
 
     }
-
-    private void showErrorMsg(String msg){
-        statusLabel.setStyle("-fx-text-fill: #FB1705");
-        unbindAndSetText(msg);
-    }
-    private void showSuccessMsg(String msg){
-        statusLabel.setStyle("-fx-text-fill: #0BC902");
-        unbindAndSetText(msg);
-    }
-    private void unbindAndSetText(String msg){
-        if(statusLabel.textProperty().isBound()){
-            statusLabel.textProperty().unbind();
-        }
-        statusLabel.setText(msg);
-
-    }
     private List<String> getColumns(RecordList recordList){
         List<String> columnList=new ArrayList<>();
         if(recordList==null){
@@ -175,6 +191,21 @@ public class HdfsFileViewerController {
 
         }
         return FXCollections.observableList(row);
+    }
+    private void showErrorMsg(String msg){
+        statusLabel.setStyle("-fx-text-fill: #FB1705");
+        unbindAndSetText(msg);
+    }
+    private void showSuccessMsg(String msg){
+        statusLabel.setStyle("-fx-text-fill: #0BC902");
+        unbindAndSetText(msg);
+    }
+    private void unbindAndSetText(String msg){
+        if(statusLabel.textProperty().isBound()){
+            statusLabel.textProperty().unbind();
+        }
+        statusLabel.setText(msg);
+
     }
 
 }
