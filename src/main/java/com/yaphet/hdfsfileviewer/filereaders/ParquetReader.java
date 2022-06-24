@@ -16,7 +16,7 @@ public class ParquetReader extends Task<RecordList> implements FileReader {
     private final File file;
 
     public ParquetReader(File file){
-        this.file=file;
+        this.file = file;
     }
 
 
@@ -24,9 +24,9 @@ public class ParquetReader extends Task<RecordList> implements FileReader {
     @Override
     protected RecordList call() throws Exception {
         updateMessage("Reading file...");
-        RecordList recordList=new RecordList();
-        ParquetDataReader reader=new ParquetDataReader(file);
-        MemoryWriter writer=new MemoryWriter(recordList);
+        RecordList recordList = new RecordList();
+        ParquetDataReader reader = new ParquetDataReader(file);
+        MemoryWriter writer = new MemoryWriter(recordList);
         Job.run(reader,writer);
         updateMessage("Reading file completed");
         return recordList;

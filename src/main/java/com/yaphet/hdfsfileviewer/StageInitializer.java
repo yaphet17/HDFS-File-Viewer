@@ -23,24 +23,23 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
     private final String stageTitle;
     private  final ApplicationContext applicationContext;
 
-    private final Logger logger= LogManager.getLogger("com.yaphet.languagetranslator");
+    private final Logger logger = LogManager.getLogger("com.yaphet.languagetranslator");
 
     public StageInitializer(@Value("${spring.application.ui.title}") String stageTitle, ApplicationContext applicationContext) {
-        this.stageTitle=stageTitle;
-        this.applicationContext=applicationContext;
+        this.stageTitle = stageTitle;
+        this.applicationContext = applicationContext;
     }
 
     @Override
     public void onApplicationEvent(StageReadyEvent event) {
         try {
-            FXMLLoader fxmlLoader=new FXMLLoader(resource.getURL());
+            FXMLLoader fxmlLoader = new FXMLLoader(resource.getURL());
             fxmlLoader.setControllerFactory(e->applicationContext.getBean(e));
-            Parent parent=fxmlLoader.load();
-            Stage stage=event.getStage();
-            Scene scene=new Scene(parent,840,620);
+            Parent parent = fxmlLoader.load();
+            Stage stage = event.getStage();
+            Scene scene = new Scene(parent,840,620);
             stage.setScene(scene);
             stage.setTitle(stageTitle);
-            stage.setResizable(false);
             stage.show();
         } catch (IOException e) {
             logger.error(e.getMessage());

@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="620.0" prefWidth="840.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.yaphet.hdfsfileviewer.controllers.HdfsFileViewerController">
+<AnchorPane maxHeight="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="620.0" prefWidth="840.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.yaphet.hdfsfileviewer.controllers.HdfsFileViewerController">
    <children>
       <VBox minHeight="-Infinity" minWidth="-Infinity" prefHeight="620.0" prefWidth="840.0">
          <children>
@@ -35,14 +35,14 @@
                   </Label>
                </children>
             </HBox>
-            <TableView fx:id="fileViewer" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="460.0" prefWidth="820.0" />
+            <TableView fx:id="fileViewer" minHeight="-Infinity" minWidth="-Infinity" prefHeight="460.0" prefWidth="820.0" />
             <HBox alignment="CENTER_LEFT" minWidth="-Infinity" prefHeight="16.0" prefWidth="840.0">
                <children>
                   <Label prefHeight="16.0" prefWidth="83.0" text="Showing" />
                   <Label fx:id="rowCountLabel" prefHeight="16.0" prefWidth="164.0" text="0 records" />
                </children>
             </HBox>
-            <HBox alignment="CENTER" prefHeight="50.0" prefWidth="200.0" spacing="10.0">
+            <HBox alignment="CENTER" minWidth="-Infinity" prefHeight="50.0" prefWidth="200.0" spacing="10.0">
                <children>
                   <Button fx:id="browseBtn" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#browse" prefHeight="30.0" prefWidth="120.0" text="Browse" />
                   <Button fx:id="pngBtn" minWidth="-Infinity" mnemonicParsing="false" onAction="#exportImage" prefWidth="120.0" text="Export PNG" />

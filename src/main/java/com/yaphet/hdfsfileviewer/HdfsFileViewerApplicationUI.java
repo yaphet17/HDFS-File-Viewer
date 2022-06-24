@@ -13,7 +13,7 @@ public class HdfsFileViewerApplicationUI extends Application {
     private ConfigurableApplicationContext applicationContext;
     @Override
     public void init(){
-        applicationContext=new SpringApplicationBuilder(HdfsFileViewerApplication.class)
+        applicationContext = new SpringApplicationBuilder(HdfsFileViewerApplication.class)
                 .run(getParameters().getRaw().toArray(new String[0]));
     }
     @Override

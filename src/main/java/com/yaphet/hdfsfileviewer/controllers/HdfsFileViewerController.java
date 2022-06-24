@@ -16,6 +16,7 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
 import javafx.scene.image.WritableImage;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.apache.logging.log4j.LogManager;
@@ -33,12 +34,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 public class HdfsFileViewerController {
 
-    private static final Logger logger= LogManager.getLogger(HdfsFileViewerController.class);
+    private static final Logger logger = LogManager.getLogger(HdfsFileViewerController.class);
     private Stage chooseFile;
     private final List<String> ACCEPTED_FORMATS = List.of("*.parquet");
     private final List<String> EXPORT_FORMATS = List.of("*.png");
     private final String EXPORT_IMAGE_FORMATS = "png";
-    private Service<RecordList> service;
+    private Service<RecordList> service;;
     @FXML
     public TableView fileViewer;
     @FXML
@@ -50,17 +51,13 @@ public class HdfsFileViewerController {
 
     @FXML
     public void initialize(){
-
-
-
-
     }
 
 
     @FXML
     public void browse(){
-        File file=getSelectedFile();
-        if(file==null){
+        File file = getSelectedFile();
+        if(file == null){
             return;
         }
         readFile(file);
@@ -73,19 +70,19 @@ public class HdfsFileViewerController {
         WritableImage snapshot = fileViewer.snapshot(param, null);
         BufferedImage img = SwingFXUtils.fromFXImage(snapshot, null);
         try {
-            File file=chooseSaveFile();
-            if(file==null){
+            File file = chooseSaveFile();
+            if(file == null){
                 //TODO: throw exceptions
                 return;
             }
             ImageIO.write(img, EXPORT_IMAGE_FORMATS, file);
             showSuccessMsg("Image successfully exported");
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
     }
     private File getSelectedFile(){
-        FileChooser fileChooser=new FileChooser();
+        FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("HDFS files", ACCEPTED_FORMATS));
         fileChooser.setTitle("Choose file");
         return fileChooser.showOpenDialog(chooseFile);
@@ -99,6 +96,7 @@ public class HdfsFileViewerController {
                 return new ParquetReader(file);
             }
         };
+
         service.start();
         bindServiceToStatus();
 
@@ -107,10 +105,10 @@ public class HdfsFileViewerController {
         }
         service.setOnFailed(e -> serviceFailed(service));
         service.setOnSucceeded(e -> Platform.runLater(this::serviceSucceeded));
-        service.setOnCancelled(e-> terminatedProcess("Process terminated"));
+        service.setOnCancelled(e -> terminatedProcess("Process terminated"));
     }
     private File chooseSaveFile(){
-        FileChooser fileChooser=new FileChooser();
+        FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Image file", EXPORT_FORMATS));
         fileChooser.setTitle("Save");
         return fileChooser.showSaveDialog(chooseFile);
@@ -137,7 +135,7 @@ public class HdfsFileViewerController {
         }
     }
     private void serviceSucceeded() {
-        RecordList recordList=service.getValue();
+        RecordList recordList = service.getValue();
         if(!recordList.isEmpty()){
             prepareTable(getColumns(recordList));
             populateTable(recordList);
@@ -157,7 +155,7 @@ public class HdfsFileViewerController {
     private void prepareTable(List<String> columnList){
         for(int i=0;i<columnList.size();i++){
             final int finalIdx = i;
-            TableColumn<ObservableList<String>,String> column=new TableColumn<>(columnList.get(i));
+            TableColumn<ObservableList<String>,String> column = new TableColumn<>(columnList.get(i));
             column.setCellValueFactory(param ->
                     new ReadOnlyObjectWrapper<>(param.getValue().get(finalIdx))
             );
@@ -173,11 +171,11 @@ public class HdfsFileViewerController {
 
     }
     private List<String> getColumns(RecordList recordList){
-        List<String> columnList=new ArrayList<>();
-        if(recordList==null){
+        List<String> columnList = new ArrayList<>();
+        if(recordList == null){
             //TODO: throw exception
         }
-        FieldList fieldList=recordList.get(1).getFieldNameList();
+        FieldList fieldList = recordList.get(1).getFieldNameList();
         for(String fieldName:fieldList){
             columnList.add(fieldName);
 
@@ -185,7 +183,7 @@ public class HdfsFileViewerController {
         return columnList;
     }
     private ObservableList getRow(Record record){
-        List<String> row=new ArrayList<>();
+        List<String> row = new ArrayList<>();
         for(int i=0;i<record.getFieldCount();i++){
             row.add(String.valueOf(record.getField(i).getValue()));
 
