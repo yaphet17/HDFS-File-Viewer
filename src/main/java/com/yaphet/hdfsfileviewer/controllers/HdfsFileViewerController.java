@@ -12,11 +12,12 @@ import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.apache.logging.log4j.LogManager;
@@ -39,20 +40,34 @@ public class HdfsFileViewerController {
     private final List<String> ACCEPTED_FORMATS = List.of("*.parquet");
     private final List<String> EXPORT_FORMATS = List.of("*.png");
     private final String EXPORT_IMAGE_FORMATS = "png";
-    private Service<RecordList> service;;
+    private Service<RecordList> service;
+
+    @FXML
+    public AnchorPane container;
+    @FXML
+    public VBox subContainer;
+    @FXML
+    public HBox searchBox;
+    @FXML
+    public HBox statusBox;
     @FXML
     public TableView fileViewer;
+    @FXML
+    public HBox counterBox;
+    @FXML
+    public HBox btnBox;
     @FXML
     public Button browseBtn;
     @FXML
     public Label statusLabel;
     @FXML
     public ProgressIndicator indicator;
+    @FXML
+    public Label rowCountLabel;
 
     @FXML
     public void initialize(){
     }
-
 
     @FXML
     public void browse(){
@@ -63,20 +78,31 @@ public class HdfsFileViewerController {
         readFile(file);
 
     }
+
+    @FXML
+    public void cancelProcess(){
+        terminatedProcess("Process terminated");
+        service.cancel();
+    }
     @FXML
     public void exportImage(){
+        logger.debug("Exporting image started...");
         SnapshotParameters param = new SnapshotParameters();
+
         param.setDepthBuffer(true);
         WritableImage snapshot = fileViewer.snapshot(param, null);
         BufferedImage img = SwingFXUtils.fromFXImage(snapshot, null);
         try {
             File file = chooseSaveFile();
             if(file == null){
-                //TODO: throw exceptions
+                showErrorMsg("Folder not selected");
                 return;
             }
             ImageIO.write(img, EXPORT_IMAGE_FORMATS, file);
-            showSuccessMsg("Image successfully exported");
+
+            String successMsg = "Image successfully exported";
+            showSuccessMsg(successMsg);
+            logger.debug(successMsg+"...");
         } catch (IOException e) {
             logger.error(e);
         }
@@ -89,7 +115,6 @@ public class HdfsFileViewerController {
     }
 
     public void readFile(File file){
-
         service = new Service<>() {
             @Override
             protected Task<RecordList> createTask() {
@@ -139,6 +164,7 @@ public class HdfsFileViewerController {
         if(!recordList.isEmpty()){
             prepareTable(getColumns(recordList));
             populateTable(recordList);
+            updateRowCounter(recordList.size());
             showSuccessMsg("");
         }else{
             showErrorMsg("Couldn't translate source text");
@@ -151,8 +177,10 @@ public class HdfsFileViewerController {
         showErrorMsg(msg);
         indicator.setVisible(false);
         browseBtn.setDisable(false);
+        logger.debug("Process terminated");
     }
     private void prepareTable(List<String> columnList){
+        logger.debug("Preparing table...");
         for(int i=0;i<columnList.size();i++){
             final int finalIdx = i;
             TableColumn<ObservableList<String>,String> column = new TableColumn<>(columnList.get(i));
@@ -160,15 +188,15 @@ public class HdfsFileViewerController {
                     new ReadOnlyObjectWrapper<>(param.getValue().get(finalIdx))
             );
             fileViewer.getColumns().add(column);
-
         }
+        logger.debug("Table prepared");
     }
-
     private void populateTable(RecordList recordList){
+        logger.debug("Populating table...");
         for(int i=0;i<recordList.size();i++){
             fileViewer.getItems().add(getRow(recordList.get(i)));
         }
-
+        logger.debug("Table populated");
     }
     private List<String> getColumns(RecordList recordList){
         List<String> columnList = new ArrayList<>();
@@ -182,13 +210,16 @@ public class HdfsFileViewerController {
         }
         return columnList;
     }
-    private ObservableList getRow(Record record){
+    private ObservableList<String> getRow(Record record){
         List<String> row = new ArrayList<>();
         for(int i=0;i<record.getFieldCount();i++){
             row.add(String.valueOf(record.getField(i).getValue()));
 
         }
         return FXCollections.observableList(row);
+    }
+    private void updateRowCounter(int rows){
+        rowCountLabel.setText(rows+" records");
     }
     private void showErrorMsg(String msg){
         statusLabel.setStyle("-fx-text-fill: #FB1705");

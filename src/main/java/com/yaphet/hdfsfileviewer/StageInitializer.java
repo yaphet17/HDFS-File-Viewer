@@ -23,6 +23,9 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
     private final String stageTitle;
     private  final ApplicationContext applicationContext;
 
+    private static final int MINIMUM_WIDTH=840;
+    private static final int MINIMUM_HEIGHT=620;
+
     private final Logger logger = LogManager.getLogger("com.yaphet.languagetranslator");
 
     public StageInitializer(@Value("${spring.application.ui.title}") String stageTitle, ApplicationContext applicationContext) {
@@ -37,7 +40,12 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
             fxmlLoader.setControllerFactory(e->applicationContext.getBean(e));
             Parent parent = fxmlLoader.load();
             Stage stage = event.getStage();
-            Scene scene = new Scene(parent,840,620);
+            Scene scene = new Scene(parent,MINIMUM_WIDTH,MINIMUM_HEIGHT);
+
+            stage.setMinWidth(MINIMUM_WIDTH);
+            stage.setMinHeight(MINIMUM_HEIGHT);
+            stage.setResizable(false);
+
             stage.setScene(scene);
             stage.setTitle(stageTitle);
             stage.show();
