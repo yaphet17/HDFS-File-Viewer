@@ -1,8 +1,10 @@
 package com.yaphet.hdfsfileviewer.services;
 
+import com.northconcepts.datapipeline.avro.AvroReader;
 import com.northconcepts.datapipeline.core.RecordList;
 import com.yaphet.hdfsfileviewer.abstractions.IFileReader;
-import com.yaphet.hdfsfileviewer.filereaders.ParquetReader;
+import com.yaphet.hdfsfileviewer.filereaders.AvroFileReader;
+import com.yaphet.hdfsfileviewer.filereaders.ParquetFileReader;
 import javafx.concurrent.Task;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,9 +16,10 @@ import java.util.Map;
 public class FileReaderService extends Task<RecordList> {
 
     private static final Logger logger = LogManager.getLogger(FileReaderService.class);
-    private final Map<String,IFileReader> FILE_READERS= new HashMap<>(){
+    private final Map<String,IFileReader> FILE_READERS = new HashMap<>(){
         {
-            put(".parquet",new ParquetReader());
+            put(".parquet", new ParquetFileReader());
+            put(".avro", new AvroFileReader());
         }
     };
 
