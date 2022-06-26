@@ -31,7 +31,7 @@ public class HdfsFileViewerController {
     private Stage chooseFile;
 
     private TableService tableService;
-    private final List<String> ACCEPTED_FORMATS = List.of("*.parquet", "*.avro");
+    private final List<String> ACCEPTED_FORMATS = List.of("*.parquet", "*.avro","*.orc");
     private final List<String> EXPORT_FORMATS = List.of("*.png");
     private Service<RecordList> service;
 

@@ -4,6 +4,7 @@ import com.northconcepts.datapipeline.avro.AvroReader;
 import com.northconcepts.datapipeline.core.RecordList;
 import com.yaphet.hdfsfileviewer.abstractions.IFileReader;
 import com.yaphet.hdfsfileviewer.filereaders.AvroFileReader;
+import com.yaphet.hdfsfileviewer.filereaders.OrcFileReader;
 import com.yaphet.hdfsfileviewer.filereaders.ParquetFileReader;
 import javafx.concurrent.Task;
 import org.apache.logging.log4j.LogManager;
@@ -20,6 +21,7 @@ public class FileReaderService extends Task<RecordList> {
         {
             put(".parquet", new ParquetFileReader());
             put(".avro", new AvroFileReader());
+            put(".orc", new OrcFileReader());
         }
     };
 
