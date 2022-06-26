@@ -3,6 +3,7 @@ package com.yaphet.hdfsfileviewer.services;
 import com.northconcepts.datapipeline.core.FieldList;
 import com.northconcepts.datapipeline.core.Record;
 import com.northconcepts.datapipeline.core.RecordList;
+import com.yaphet.hdfsfileviewer.exceptions.ColumnNotFoundException;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -13,7 +14,7 @@ public class TableService {
 
     public List<String> getColumns(RecordList recordList){
         if(recordList == null){
-            //TODO: throw exception
+           throw new ColumnNotFoundException();
         }
         List<String> columnList = new ArrayList<>();
         FieldList fieldList = recordList.get(1).getFieldNameList();

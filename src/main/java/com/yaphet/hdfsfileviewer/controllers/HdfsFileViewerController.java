@@ -74,11 +74,6 @@ public class HdfsFileViewerController {
     }
 
     @FXML
-    public void cancelProcess(){
-        terminatedProcess("Process terminated");
-        service.cancel();
-    }
-    @FXML
     public void exportImage(){
         File file = chooseSaveFolder();
 
@@ -86,10 +81,14 @@ public class HdfsFileViewerController {
             showErrorMsg("Folder not selected");
             return;
         }
-        new ExportImageService(file, fileViewer);
+        new ExportImageService(file, fileViewer).export();
         showSuccessMsg("Image successfully exported");
     }
-
+    @FXML
+    public void cancelProcess(){
+        terminatedProcess("Process terminated");
+        service.cancel();
+    }
 
     public void readFile(File file){
         service = new Service<>() {
