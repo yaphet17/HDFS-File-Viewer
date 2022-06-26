@@ -16,7 +16,7 @@ public class ParquetReader implements IFileReader {
         ParquetDataReader reader = new ParquetDataReader(file);
         MemoryWriter writer = new MemoryWriter(recordList);
 
-        Job.run(reader,writer);
+        Job.run(reader, writer);
         return recordList;
     }
 }

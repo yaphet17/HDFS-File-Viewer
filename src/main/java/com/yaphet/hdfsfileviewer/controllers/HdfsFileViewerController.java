@@ -3,6 +3,7 @@ package com.yaphet.hdfsfileviewer.controllers;
 import com.northconcepts.datapipeline.core.FieldList;
 import com.northconcepts.datapipeline.core.Record;
 import com.northconcepts.datapipeline.core.RecordList;
+import com.yaphet.hdfsfileviewer.services.ExportImageService;
 import com.yaphet.hdfsfileviewer.services.FileReaderService;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -10,11 +11,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
-import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
-import javafx.scene.image.WritableImage;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -24,10 +22,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -39,7 +34,6 @@ public class HdfsFileViewerController {
     private Stage chooseFile;
     private final List<String> ACCEPTED_FORMATS = List.of("*.parquet");
     private final List<String> EXPORT_FORMATS = List.of("*.png");
-    private final String EXPORT_IMAGE_FORMATS = "png";
     private Service<RecordList> service;
 
     @FXML
@@ -72,6 +66,7 @@ public class HdfsFileViewerController {
     @FXML
     public void browse(){
         File file = getSelectedFile();
+
         if(file == null){
             return;
         }
@@ -85,29 +80,18 @@ public class HdfsFileViewerController {
     }
     @FXML
     public void exportImage(){
-        logger.debug("Exporting image started...");
-        SnapshotParameters param = new SnapshotParameters();
+        File file = chooseSaveFile();
 
-        param.setDepthBuffer(true);
-        WritableImage snapshot = fileViewer.snapshot(param, null);
-        BufferedImage img = SwingFXUtils.fromFXImage(snapshot, null);
-        try {
-            File file = chooseSaveFile();
-            if(file == null){
-                showErrorMsg("Folder not selected");
-                return;
-            }
-            ImageIO.write(img, EXPORT_IMAGE_FORMATS, file);
-
-            String successMsg = "Image successfully exported";
-            showSuccessMsg(successMsg);
-            logger.debug(successMsg+"...");
-        } catch (IOException e) {
-            logger.error(e);
+        if(file == null){
+            showErrorMsg("Folder not selected");
+            return;
         }
+        new ExportImageService(file, fileViewer);
+        showSuccessMsg("Image successfully exported");
     }
     private File getSelectedFile(){
         FileChooser fileChooser = new FileChooser();
+
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("HDFS files", ACCEPTED_FORMATS));
         fileChooser.setTitle("Choose file");
         return fileChooser.showOpenDialog(chooseFile);
@@ -132,6 +116,7 @@ public class HdfsFileViewerController {
     }
     private File chooseSaveFile(){
         FileChooser fileChooser = new FileChooser();
+
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Image file", EXPORT_FORMATS));
         fileChooser.setTitle("Save");
         return fileChooser.showSaveDialog(chooseFile);
@@ -149,6 +134,7 @@ public class HdfsFileViewerController {
     private void serviceFailed(Service<RecordList> service){
         //automatic retry for 3 times
         AtomicInteger fails = new AtomicInteger();
+
         if (fails.get() <= 3) {
             fails.getAndIncrement();
             service.reset();
@@ -159,6 +145,7 @@ public class HdfsFileViewerController {
     }
     private void serviceSucceeded() {
         RecordList recordList = service.getValue();
+
         if(!recordList.isEmpty()){
             prepareTable(getColumns(recordList));
             populateTable(recordList);
@@ -209,6 +196,7 @@ public class HdfsFileViewerController {
     }
     private ObservableList<String> getRow(Record record){
         List<String> row = new ArrayList<>();
+
         for(int i=0;i<record.getFieldCount();i++){
             row.add(String.valueOf(record.getField(i).getValue()));
 
