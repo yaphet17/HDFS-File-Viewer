@@ -54,13 +54,10 @@ public class FileReaderService extends Task<RecordList> {
     }
 
     public static List<String> getAcceptedFormats(){
-        List<String> acceptedFormatList = new ArrayList<>(){
-            {
-                for(String format : FILE_READERS.keySet()){
-                    add("*" + format);
-                }
-            }
-        };
-        return acceptedFormatList;
+        return FILE_READERS
+                .keySet()
+                .stream()
+                .map(e -> "*"+e)
+                .toList();
     }
 }

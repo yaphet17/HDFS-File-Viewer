@@ -3,7 +3,6 @@ package com.yaphet.hdfsfileviewer.filereaders;
 import com.northconcepts.datapipeline.core.RecordList;
 import com.northconcepts.datapipeline.job.Job;
 import com.northconcepts.datapipeline.orc.OrcDataReader;
-import com.northconcepts.datapipeline.parquet.ParquetDataReader;
 import com.yaphet.hdfsfileviewer.abstractions.IFileReader;
 
 import java.io.File;
