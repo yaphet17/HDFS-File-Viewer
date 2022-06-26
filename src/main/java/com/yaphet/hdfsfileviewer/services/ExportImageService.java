@@ -1,5 +1,6 @@
 package com.yaphet.hdfsfileviewer.services;
 
+import com.yaphet.hdfsfileviewer.abstractions.IExportFile;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.TableView;
@@ -12,7 +13,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-public class ExportImageService {
+public class ExportImageService implements IExportFile {
 
     private static final Logger logger = LogManager.getLogger(ExportImageService.class);
     private final TableView fileViewer;
@@ -26,6 +27,7 @@ public class ExportImageService {
     }
 
 
+    @Override
     public void export(){
         SnapshotParameters param = new SnapshotParameters();
 

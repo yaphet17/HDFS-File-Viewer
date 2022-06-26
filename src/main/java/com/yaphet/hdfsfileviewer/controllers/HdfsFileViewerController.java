@@ -111,7 +111,7 @@ public class HdfsFileViewerController {
     private File chooseInputFile(){
         FileChooser fileChooser = new FileChooser();
 
-        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("HDFS files", ACCEPTED_FORMATS));
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("HDFS files", FileReaderService.getAcceptedFormats()));
         fileChooser.setTitle("Choose file");
         return fileChooser.showOpenDialog(chooseFile);
     }
