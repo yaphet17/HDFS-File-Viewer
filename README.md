@@ -5,6 +5,11 @@ these files. You can also convert these file formats into JSON and CSV files.
 
 It allows you to capture a snapshot of the table and export it as a PNG image.
 
+## Tech Stacks
+  - [JavaFX](https://openjfx.io/) for UI.
+  - [Gradle](https://gradle.org/) for dependecy management.
+  - [Data Pipeline](https://northconcepts.com/) for reading HDFS files.
+
 ## Setup
   - Install [JDK](https://www.oracle.com/java/technologies/downloads/) and [Gradle](https://gradle.org/install/) if you don't already have them.
   - Clone this repository in your machine.
