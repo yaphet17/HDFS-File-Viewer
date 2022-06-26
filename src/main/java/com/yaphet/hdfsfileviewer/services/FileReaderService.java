@@ -10,7 +10,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,14 +49,14 @@ public class FileReaderService extends Task<RecordList> {
 
 
     private String getFileExtension(String fileName){
-        return fileName.substring( fileName.lastIndexOf("."));
+        return fileName.substring(fileName.lastIndexOf("."));
     }
 
     public static List<String> getAcceptedFormats(){
         return FILE_READERS
                 .keySet()
                 .stream()
-                .map(e -> "*"+e)
+                .map(e -> "*" + e)
                 .toList();
     }
 }
