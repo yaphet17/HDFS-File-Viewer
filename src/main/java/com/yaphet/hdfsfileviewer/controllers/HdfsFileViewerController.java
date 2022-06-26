@@ -1,13 +1,11 @@
 package com.yaphet.hdfsfileviewer.controllers;
 
-import com.northconcepts.datapipeline.core.FieldList;
-import com.northconcepts.datapipeline.core.Record;
 import com.northconcepts.datapipeline.core.RecordList;
 import com.yaphet.hdfsfileviewer.services.ExportImageService;
 import com.yaphet.hdfsfileviewer.services.FileReaderService;
+import com.yaphet.hdfsfileviewer.services.TableService;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -23,7 +21,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -32,6 +29,8 @@ public class HdfsFileViewerController {
 
     private static final Logger logger = LogManager.getLogger(HdfsFileViewerController.class);
     private Stage chooseFile;
+
+    private TableService tableService;
     private final List<String> ACCEPTED_FORMATS = List.of("*.parquet");
     private final List<String> EXPORT_FORMATS = List.of("*.png");
     private Service<RecordList> service;
@@ -61,11 +60,12 @@ public class HdfsFileViewerController {
 
     @FXML
     public void initialize(){
+        tableService = new TableService();
     }
 
     @FXML
     public void browse(){
-        File file = getSelectedFile();
+        File file = chooseInputFile();
 
         if(file == null){
             return;
@@ -80,7 +80,7 @@ public class HdfsFileViewerController {
     }
     @FXML
     public void exportImage(){
-        File file = chooseSaveFile();
+        File file = chooseSaveFolder();
 
         if(file == null){
             showErrorMsg("Folder not selected");
@@ -89,13 +89,7 @@ public class HdfsFileViewerController {
         new ExportImageService(file, fileViewer);
         showSuccessMsg("Image successfully exported");
     }
-    private File getSelectedFile(){
-        FileChooser fileChooser = new FileChooser();
 
-        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("HDFS files", ACCEPTED_FORMATS));
-        fileChooser.setTitle("Choose file");
-        return fileChooser.showOpenDialog(chooseFile);
-    }
 
     public void readFile(File file){
         service = new Service<>() {
@@ -114,7 +108,15 @@ public class HdfsFileViewerController {
         service.setOnSucceeded(e -> Platform.runLater(this::serviceSucceeded));
         service.setOnCancelled(e -> terminatedProcess("Process terminated"));
     }
-    private File chooseSaveFile(){
+
+    private File chooseInputFile(){
+        FileChooser fileChooser = new FileChooser();
+
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("HDFS files", ACCEPTED_FORMATS));
+        fileChooser.setTitle("Choose file");
+        return fileChooser.showOpenDialog(chooseFile);
+    }
+    private File chooseSaveFolder(){
         FileChooser fileChooser = new FileChooser();
 
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Image file", EXPORT_FORMATS));
@@ -132,9 +134,9 @@ public class HdfsFileViewerController {
         browseBtn.setDisable(true);
     }
     private void serviceFailed(Service<RecordList> service){
-        //automatic retry for 3 times
         AtomicInteger fails = new AtomicInteger();
 
+        //automatically retry 3 times
         if (fails.get() <= 3) {
             fails.getAndIncrement();
             service.reset();
@@ -147,7 +149,7 @@ public class HdfsFileViewerController {
         RecordList recordList = service.getValue();
 
         if(!recordList.isEmpty()){
-            prepareTable(getColumns(recordList));
+            prepareTable(tableService.getColumns(recordList));
             populateTable(recordList);
             updateRowCounter(recordList.size());
             showSuccessMsg("");
@@ -179,30 +181,11 @@ public class HdfsFileViewerController {
     private void populateTable(RecordList recordList){
         logger.debug("Populating table...");
         for(int i=0;i<recordList.size();i++){
-            fileViewer.getItems().add(getRow(recordList.get(i)));
+            fileViewer.getItems().add(tableService.getRow(recordList.get(i)));
         }
         logger.debug("Table populated");
     }
-    private List<String> getColumns(RecordList recordList){
-        if(recordList == null){
-            //TODO: throw exception
-        }
-        List<String> columnList = new ArrayList<>();
-        FieldList fieldList = recordList.get(1).getFieldNameList();
-        for(String fieldName : fieldList){
-            columnList.add(fieldName);
-        }
-        return columnList;
-    }
-    private ObservableList<String> getRow(Record record){
-        List<String> row = new ArrayList<>();
 
-        for(int i=0;i<record.getFieldCount();i++){
-            row.add(String.valueOf(record.getField(i).getValue()));
-
-        }
-        return FXCollections.observableList(row);
-    }
     private void updateRowCounter(int rows){
         rowCountLabel.setText(rows+" records");
     }
