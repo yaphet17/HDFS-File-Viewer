@@ -1,20 +1,16 @@
 package com.yaphet.hdfsfileviewer.controllers;
 
-import com.northconcepts.datapipeline.core.FieldList;
-import com.northconcepts.datapipeline.core.Record;
 import com.northconcepts.datapipeline.core.RecordList;
-import com.yaphet.hdfsfileviewer.filereaders.ParquetReader;
+import com.yaphet.hdfsfileviewer.services.ExportImageService;
+import com.yaphet.hdfsfileviewer.services.FileReaderService;
+import com.yaphet.hdfsfileviewer.services.TableService;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
-import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
-import javafx.scene.image.WritableImage;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -24,11 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -37,9 +29,10 @@ public class HdfsFileViewerController {
 
     private static final Logger logger = LogManager.getLogger(HdfsFileViewerController.class);
     private Stage chooseFile;
-    private final List<String> ACCEPTED_FORMATS = List.of("*.parquet");
+
+    private TableService tableService;
+    private final List<String> ACCEPTED_FORMATS = List.of("*.parquet", "*.avro","*.orc");
     private final List<String> EXPORT_FORMATS = List.of("*.png");
-    private final String EXPORT_IMAGE_FORMATS = "png";
     private Service<RecordList> service;
 
     @FXML
@@ -67,73 +60,64 @@ public class HdfsFileViewerController {
 
     @FXML
     public void initialize(){
+        tableService = new TableService();
     }
 
     @FXML
     public void browse(){
-        File file = getSelectedFile();
+        File file = chooseInputFile();
+
         if(file == null){
             return;
         }
         readFile(file);
-
     }
 
+    @FXML
+    public void exportImage(){
+        File file = chooseSaveFolder();
+
+        if(file == null){
+            showErrorMsg("Folder not selected");
+            return;
+        }
+        new ExportImageService(file, fileViewer).export();
+        showSuccessMsg("Image successfully exported");
+    }
     @FXML
     public void cancelProcess(){
         terminatedProcess("Process terminated");
         service.cancel();
-    }
-    @FXML
-    public void exportImage(){
-        logger.debug("Exporting image started...");
-        SnapshotParameters param = new SnapshotParameters();
-
-        param.setDepthBuffer(true);
-        WritableImage snapshot = fileViewer.snapshot(param, null);
-        BufferedImage img = SwingFXUtils.fromFXImage(snapshot, null);
-        try {
-            File file = chooseSaveFile();
-            if(file == null){
-                showErrorMsg("Folder not selected");
-                return;
-            }
-            ImageIO.write(img, EXPORT_IMAGE_FORMATS, file);
-
-            String successMsg = "Image successfully exported";
-            showSuccessMsg(successMsg);
-            logger.debug(successMsg+"...");
-        } catch (IOException e) {
-            logger.error(e);
-        }
-    }
-    private File getSelectedFile(){
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("HDFS files", ACCEPTED_FORMATS));
-        fileChooser.setTitle("Choose file");
-        return fileChooser.showOpenDialog(chooseFile);
     }
 
     public void readFile(File file){
         service = new Service<>() {
             @Override
             protected Task<RecordList> createTask() {
-                return new ParquetReader(file);
+                return new FileReaderService(file);
             }
         };
-
         service.start();
         bindServiceToStatus();
-
         if(service.isRunning()){
             serviceRunning();
         }
+
         service.setOnFailed(e -> serviceFailed(service));
         service.setOnSucceeded(e -> Platform.runLater(this::serviceSucceeded));
         service.setOnCancelled(e -> terminatedProcess("Process terminated"));
     }
-    private File chooseSaveFile(){
+
+    private File chooseInputFile(){
         FileChooser fileChooser = new FileChooser();
+
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("HDFS files", FileReaderService.getAcceptedFormats()));
+        fileChooser.setTitle("Choose file");
+        return fileChooser.showOpenDialog(chooseFile);
+    }
+    private File chooseSaveFolder(){
+        FileChooser fileChooser = new FileChooser();
+
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Image file", EXPORT_FORMATS));
         fileChooser.setTitle("Save");
         return fileChooser.showSaveDialog(chooseFile);
@@ -149,8 +133,9 @@ public class HdfsFileViewerController {
         browseBtn.setDisable(true);
     }
     private void serviceFailed(Service<RecordList> service){
-        //automatic retry for 3 times
         AtomicInteger fails = new AtomicInteger();
+
+        //automatically retry 3 times
         if (fails.get() <= 3) {
             fails.getAndIncrement();
             service.reset();
@@ -161,8 +146,9 @@ public class HdfsFileViewerController {
     }
     private void serviceSucceeded() {
         RecordList recordList = service.getValue();
+
         if(!recordList.isEmpty()){
-            prepareTable(getColumns(recordList));
+            prepareTable(tableService.getColumns(recordList));
             populateTable(recordList);
             updateRowCounter(recordList.size());
             showSuccessMsg("");
@@ -194,30 +180,11 @@ public class HdfsFileViewerController {
     private void populateTable(RecordList recordList){
         logger.debug("Populating table...");
         for(int i=0;i<recordList.size();i++){
-            fileViewer.getItems().add(getRow(recordList.get(i)));
+            fileViewer.getItems().add(tableService.getRow(recordList.get(i)));
         }
         logger.debug("Table populated");
     }
-    private List<String> getColumns(RecordList recordList){
-        List<String> columnList = new ArrayList<>();
-        if(recordList == null){
-            //TODO: throw exception
-        }
-        FieldList fieldList = recordList.get(1).getFieldNameList();
-        for(String fieldName:fieldList){
-            columnList.add(fieldName);
 
-        }
-        return columnList;
-    }
-    private ObservableList<String> getRow(Record record){
-        List<String> row = new ArrayList<>();
-        for(int i=0;i<record.getFieldCount();i++){
-            row.add(String.valueOf(record.getField(i).getValue()));
-
-        }
-        return FXCollections.observableList(row);
-    }
     private void updateRowCounter(int rows){
         rowCountLabel.setText(rows+" records");
     }
