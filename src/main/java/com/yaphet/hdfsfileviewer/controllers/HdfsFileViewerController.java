@@ -3,7 +3,7 @@ package com.yaphet.hdfsfileviewer.controllers;
 import com.northconcepts.datapipeline.core.FieldList;
 import com.northconcepts.datapipeline.core.Record;
 import com.northconcepts.datapipeline.core.RecordList;
-import com.yaphet.hdfsfileviewer.filereaders.ParquetReader;
+import com.yaphet.hdfsfileviewer.services.FileReaderService;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
@@ -76,7 +76,6 @@ public class HdfsFileViewerController {
             return;
         }
         readFile(file);
-
     }
 
     @FXML
@@ -118,16 +117,15 @@ public class HdfsFileViewerController {
         service = new Service<>() {
             @Override
             protected Task<RecordList> createTask() {
-                return new ParquetReader(file);
+                return new FileReaderService(file);
             }
         };
-
         service.start();
         bindServiceToStatus();
-
         if(service.isRunning()){
             serviceRunning();
         }
+
         service.setOnFailed(e -> serviceFailed(service));
         service.setOnSucceeded(e -> Platform.runLater(this::serviceSucceeded));
         service.setOnCancelled(e -> terminatedProcess("Process terminated"));
@@ -199,14 +197,13 @@ public class HdfsFileViewerController {
         logger.debug("Table populated");
     }
     private List<String> getColumns(RecordList recordList){
-        List<String> columnList = new ArrayList<>();
         if(recordList == null){
             //TODO: throw exception
         }
+        List<String> columnList = new ArrayList<>();
         FieldList fieldList = recordList.get(1).getFieldNameList();
-        for(String fieldName:fieldList){
+        for(String fieldName : fieldList){
             columnList.add(fieldName);
-
         }
         return columnList;
     }
